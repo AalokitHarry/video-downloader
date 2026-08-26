@@ -125,6 +125,21 @@ need ffmpeg available in the build environment — check whether your platform
 lets you add an apt package/buildpack for it, or prefer the Docker path
 above if it doesn't.
 
+**YouTube and cloud hosting don't mix well by default.** Confirmed directly
+against a real deployment: YouTube serves `Sign in to confirm you're not a
+bot` to cloud/datacenter IP ranges (Cloud Run, AWS, Azure, etc.) far more
+readily than to a residential connection — this doesn't show up testing
+locally, only once actually hosted. The Docker path bundles a fix for this:
+[bgutil-ytdlp-pot-provider](https://github.com/Brainicism/bgutil-ytdlp-pot-provider),
+a proof-of-origin token generator that runs alongside the app in the same
+container (`start.sh`) and makes the traffic look legitimate to YouTube —
+not a guaranteed fix (the project's own README says as much), but the
+actively-maintained community answer to this exact problem. **This only
+works via the Docker path** — the Procfile (buildpack, no Docker) runs
+`waitress-serve` directly with no token provider alongside it, so YouTube
+downloads should be expected to fail on a buildpack-based host without
+extra work.
+
 **Before you make it public**, two things to know:
 - The dev-server safeguard that binds to `127.0.0.1` only applies to
   `python app.py`. The Procfile/Docker entrypoints intentionally bind
