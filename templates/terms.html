@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms & Disclaimer — Video Downloader</title>
+<meta name="description" content="Terms of use and disclaimer for this video downloader tool.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236f5cff'/%3E%3Cstop offset='1' stop-color='%23ff5c8a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M16 8v11m0 0-4.5-4.5M16 19l4.5-4.5' stroke='white' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Cpath d='M9 23h14' stroke='white' stroke-width='2.3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="scene" aria-hidden="true">
+    <span class="blob blob-a"></span>
+    <span class="blob blob-b"></span>
+    <span class="blob blob-c"></span>
+    <span class="grain"></span>
+  </div>
+
+  <main class="wrap">
+    <div class="card legal-card">
+      <p class="eyebrow reveal" style="--d:0">
+        <span class="dot"></span> Terms &amp; Disclaimer
+      </p>
+
+      <h1 class="legal-h1 reveal" style="--d:1">Before you use this</h1>
+      <p class="subtitle reveal" style="--d:2">
+        Short version: this tool fetches publicly-accessible media on your
+        request. What you do with what you download is on you.
+      </p>
+
+      <div class="legal-body reveal" style="--d:3">
+        <h2>What this is</h2>
+        <p>
+          A tool that fetches a video, audio track, or photo from a link you
+          provide and sends it to your device. It doesn't browse platforms
+          for you, doesn't suggest content, and doesn't keep a copy after
+          your download finishes — each file is deleted from the server the
+          moment it's been sent to you.
+        </p>
+
+        <h2>Your responsibility</h2>
+        <p>
+          Copyright law applies to downloaded content the same way it
+          applies everywhere else. Whether you're allowed to download or
+          reuse a specific video, photo, or audio track depends on who owns
+          it and what rights you have — this tool doesn't check that for
+          you, and using it doesn't grant you any rights you didn't already
+          have. You're responsible for making sure you have permission
+          before downloading something, and especially before sharing or
+          reposting it elsewhere.
+        </p>
+
+        <h2>No warranty</h2>
+        <p>
+          Provided as-is, free, with no account required. Downloads can
+          fail if a source site changes how it serves content, blocks a
+          request, or requires a login this tool intentionally doesn't
+          support. No guarantee of uptime, accuracy, or availability, and
+          no liability for how the tool is used or for any consequence of
+          that use.
+        </p>
+
+        <h2>Reporting a concern</h2>
+        <p>
+          If you believe this tool has been used to access or distribute
+          something it shouldn't have, or you're a rights holder with a
+          takedown request, email
+          <a href="mailto:testm1311@gmail.com">testm1311@gmail.com</a>.
+        </p>
+      </div>
+
+      <a href="{{ url_for('index') }}" class="back-link reveal" style="--d:4">&larr; Back to downloader</a>
+    </div>
+  </main>
+</body>
+</html>
