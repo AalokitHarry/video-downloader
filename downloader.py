@@ -146,6 +146,12 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
     tmp_dir = tempfile.mkdtemp(dir=downloads_dir)
     outtmpl = os.path.join(tmp_dir, "%(title).150B [%(id)s].%(ext)s")
 
+    # The default "web" client is what triggers YouTube's bot-check on cloud
+    # IPs (confirmed on the live deployment, PO token provider notwithstanding).
+    # Non-web clients get different, sometimes less strict enforcement; trying
+    # a few in order costs nothing extra when the first one already works.
+    youtube_extractor_args = {"youtube": {"player_client": ["android", "tv", "web"]}}
+
     if audio_only:
         ydl_opts = {
             "format": "bestaudio/best",
@@ -163,6 +169,7 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
             "retries": 3,
             "socket_timeout": 30,
             "ffmpeg_location": FFMPEG_PATH,
+            "extractor_args": youtube_extractor_args,
         }
     else:
         ydl_opts = {
@@ -176,6 +183,7 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
             "retries": 3,
             "socket_timeout": 30,
             "ffmpeg_location": FFMPEG_PATH,
+            "extractor_args": youtube_extractor_args,
         }
 
     try:
