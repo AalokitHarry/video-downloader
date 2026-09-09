@@ -94,16 +94,6 @@ def privacy():
     return render_template("privacy.html")
 
 
-@app.route("/ads.txt")
-def ads_txt():
-    # Required by AdSense for reliable ad fill: declares this site is an
-    # authorized seller for the pub-5271255119909349 account. Must be served
-    # at the site root, not under /static.
-    return "google.com, pub-5271255119909349, DIRECT, f08c47fec0942fa0\n", 200, {
-        "Content-Type": "text/plain"
-    }
-
-
 @app.route("/robots.txt")
 def robots_txt():
     body = f"User-agent: *\nAllow: /\n\nSitemap: https://{CANONICAL_HOST}/sitemap.xml\n"
