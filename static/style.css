@@ -239,6 +239,15 @@ body {
   min-height: 90px;
 }
 
+/* A slot with a real ad unit in it -- same sizing/margin as .ad-slot's
+   placeholder but no dashed border/background/label chrome. */
+.ad-mount {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .ad-rect {
   max-width: 300px;
   min-height: 250px;
