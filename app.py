@@ -3,7 +3,7 @@ import os
 import shutil
 import threading
 
-from flask import Flask, jsonify, render_template, request, send_file
+from flask import Flask, jsonify, redirect, render_template, request, send_file, url_for
 
 from downloader import (
     FFMPEG_PATH,
@@ -18,8 +18,24 @@ from downloader import (
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DOWNLOADS_DIR = os.path.join(BASE_DIR, "downloads")
 
+# The site is reachable at both this custom domain and the Render-assigned
+# *.onrender.com host. Without a canonical redirect, search engines can index
+# both as separate pages with identical content, splitting ranking signals
+# between them. 308 (not 301) so any non-GET request (e.g. /api/download)
+# keeps its method and body across the redirect.
+CANONICAL_HOST = "aiod.online"
+
 app = Flask(__name__)
 download_lock = threading.Lock()
+
+
+@app.before_request
+def _redirect_to_canonical_host():
+    host = request.host.split(":")[0]
+    if host in (CANONICAL_HOST, "localhost", "127.0.0.1"):
+        return None
+    target = f"https://{CANONICAL_HOST}{request.full_path if request.query_string else request.path}"
+    return redirect(target, code=308)
 
 
 class _CleanupOnClose:
@@ -86,6 +102,33 @@ def ads_txt():
     return "google.com, pub-5271255119909349, DIRECT, f08c47fec0942fa0\n", 200, {
         "Content-Type": "text/plain"
     }
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    body = f"User-agent: *\nAllow: /\n\nSitemap: https://{CANONICAL_HOST}/sitemap.xml\n"
+    return body, 200, {"Content-Type": "text/plain"}
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    pages = [
+        (url_for("index"), "1.0", "weekly"),
+        (url_for("terms"), "0.3", "monthly"),
+        (url_for("privacy"), "0.3", "monthly"),
+    ]
+    urls = "\n".join(
+        f"  <url><loc>https://{CANONICAL_HOST}{path}</loc>"
+        f"<changefreq>{freq}</changefreq><priority>{priority}</priority></url>"
+        for path, priority, freq in pages
+    )
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{urls}\n"
+        "</urlset>\n"
+    )
+    return body, 200, {"Content-Type": "application/xml"}
 
 
 @app.route("/api/download", methods=["POST"])

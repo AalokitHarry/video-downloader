@@ -3,13 +3,105 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Video Downloader</title>
-<meta name="description" content="Paste a video link from YouTube, TikTok, Instagram, X or Facebook and download it in the highest quality. No watermarks, no sign-up.">
+<title>Video Downloader — Save YouTube, TikTok &amp; Instagram Videos Free</title>
+<meta name="description" content="Download videos, MP3 audio, or photos from YouTube, TikTok, Instagram, X and Facebook in the highest quality. 100% free, no sign-up, no watermark.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://aiod.online/">
+<meta name="theme-color" content="#0b0b12">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Video Downloader">
+<meta property="og:title" content="Video Downloader — Save YouTube, TikTok & Instagram Videos Free">
+<meta property="og:description" content="Download videos, MP3 audio, or photos from YouTube, TikTok, Instagram, X and Facebook in the highest quality. 100% free, no sign-up, no watermark.">
+<meta property="og:url" content="https://aiod.online/">
+<meta property="og:image" content="https://aiod.online/static/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Video Downloader — Save YouTube, TikTok & Instagram Videos Free">
+<meta name="twitter:description" content="Download videos, MP3 audio, or photos from YouTube, TikTok, Instagram, X and Facebook in the highest quality. 100% free, no sign-up, no watermark.">
+<meta name="twitter:image" content="https://aiod.online/static/og-image.png">
+
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236f5cff'/%3E%3Cstop offset='1' stop-color='%23ff5c8a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M16 8v11m0 0-4.5-4.5M16 19l4.5-4.5' stroke='white' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Cpath d='M9 23h14' stroke='white' stroke-width='2.3' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "name": "Video Downloader",
+      "url": "https://aiod.online/",
+      "description": "Free online tool to download videos, MP3 audio, and photos from YouTube, TikTok, Instagram, X, and Facebook in the highest available quality. No sign-up, no watermark.",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is this video downloader free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes — no account, subscription, or payment is required for video, MP3, or photo downloads."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need to install an app or browser extension?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Everything runs in your browser — paste a link and the file downloads straight to your device."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Will the downloaded video have a watermark?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. You get the original, unmodified file the platform serves — this tool doesn't add or remove watermarks."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I download YouTube Shorts, Instagram Reels, or TikTok videos?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes — all three are supported the same way as regular videos. Paste the Short, Reel, or TikTok link and choose Video."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why did my download fail?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Usually because the video is private, age-restricted, or the platform is requiring a login just to view it — common on Instagram and X. This tool only fetches publicly accessible media."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is it legal to download videos this way?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Downloading itself isn't illegal, but what you do with the file is subject to the same copyright rules as anywhere else. See the Terms & Disclaimer page for details."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
 <!-- Google AdSense: loader script. If Auto ads is enabled in the AdSense
      dashboard, this alone is enough -- Google places ads automatically.
      For ads pinned to the placeholder slots below instead, create manual
@@ -20,6 +112,11 @@
      crossorigin="anonymous"></script>
 </head>
 <body>
+  <div class="scene-extended" aria-hidden="true">
+    <span class="blob blob-d"></span>
+    <span class="blob blob-e"></span>
+  </div>
+
   <div class="scene" aria-hidden="true">
     <span class="blob blob-a"></span>
     <span class="blob blob-b"></span>
@@ -148,6 +245,51 @@
         <span class="ad-label">Advertisement</span>
         <span class="ad-dims">300 &times; 250</span>
       </div>
+
+      <section class="card content-card reveal" style="--d:6" aria-label="About this video downloader">
+        <h2>How it works</h2>
+        <ol class="steps">
+          <li><strong>Copy the link.</strong> Grab the URL of any video, Short, Reel, or post from YouTube, TikTok, Instagram, X, or Facebook.</li>
+          <li><strong>Paste it and pick a format.</strong> Drop the link into the box above and choose Video, MP3, or Photo.</li>
+          <li><strong>Download.</strong> The highest-quality file is fetched straight to your device — no account, no browser extension, no ad-gated "download" buttons.</li>
+        </ol>
+
+        <h2>Supported platforms</h2>
+        <p>
+          This tool runs on <a href="https://github.com/yt-dlp/yt-dlp" rel="noopener">yt-dlp</a>,
+          so it works with YouTube (including Shorts), TikTok, Instagram, X/Twitter, Facebook,
+          and hundreds of other sites. YouTube and TikTok download reliably without logging in.
+          Instagram and X increasingly require a login just to view video on their own site —
+          when that happens here, it's the platform's restriction, not a bug. Photo and carousel
+          posts on Instagram and X are supported separately as image downloads.
+        </p>
+
+        <h2>Frequently asked questions</h2>
+        <details class="faq-item">
+          <summary>Is this video downloader free?</summary>
+          <p>Yes — no account, subscription, or payment is required for video, MP3, or photo downloads.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Do I need to install an app or browser extension?</summary>
+          <p>No. Everything runs in your browser — paste a link and the file downloads straight to your device.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Will the downloaded video have a watermark?</summary>
+          <p>No. You get the original, unmodified file the platform serves — this tool doesn't add or remove watermarks.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can I download YouTube Shorts, Instagram Reels, or TikTok videos?</summary>
+          <p>Yes — all three are supported the same way as regular videos. Paste the Short, Reel, or TikTok link and choose Video.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Why did my download fail?</summary>
+          <p>Usually because the video is private, age-restricted, or the platform is requiring a login just to view it — common on Instagram and X. This tool only fetches publicly accessible media.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is it legal to download videos this way?</summary>
+          <p>Downloading itself isn't illegal, but what you do with the file is subject to the same copyright rules as anywhere else. See the <a href="{{ url_for('terms') }}">Terms &amp; Disclaimer</a> page for details.</p>
+        </details>
+      </section>
 
       <p class="footnote reveal" style="--d:6">No watermarks. No registration.</p>
       <p class="footnote-links reveal" style="--d:6">

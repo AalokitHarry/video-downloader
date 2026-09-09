@@ -38,6 +38,18 @@ body {
   position: relative;
 }
 
+/* Spans the full document height (not just one viewport) so the page's
+   color glows don't run out partway down once content is taller than the
+   screen -- .scene below stays position:fixed for the hero's own blobs and
+   floating badges, which are meant to frame just the top card. */
+.scene-extended {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
 /* ---------- animated background ---------- */
 
 .scene {
@@ -96,6 +108,24 @@ body {
 @keyframes drift-c {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(4vmax, -6vmax) scale(1.08); }
+}
+
+.blob-d {
+  width: 38vmax;
+  height: 38vmax;
+  right: -14vmax;
+  top: 48%;
+  background: radial-gradient(circle at 40% 40%, var(--accent-a), transparent 70%);
+  animation: drift-b 24s ease-in-out infinite;
+}
+
+.blob-e {
+  width: 36vmax;
+  height: 36vmax;
+  left: -12vmax;
+  top: 78%;
+  background: radial-gradient(circle at 50% 50%, var(--accent-b), transparent 70%);
+  animation: drift-a 28s ease-in-out infinite;
 }
 
 .grain {
@@ -681,6 +711,121 @@ h1 {
 
 .footnote-links a:hover {
   color: var(--text);
+}
+
+/* ---------- content sections (how it works / platforms / FAQ) ---------- */
+
+.content-card {
+  margin-top: 24px;
+  text-align: left;
+}
+
+.content-card h2 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0 0 16px;
+}
+
+.content-card h2:not(:first-child) {
+  margin-top: 32px;
+}
+
+.content-card > p {
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.content-card > p a {
+  color: var(--text);
+}
+
+.steps {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  counter-reset: step;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.steps li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 40px;
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.6;
+}
+
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.steps strong {
+  color: var(--text);
+}
+
+.faq-item {
+  border-top: 1px solid var(--card-border);
+  padding: 14px 0;
+}
+
+.faq-item:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.faq-item summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.94rem;
+  color: var(--text);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary::after {
+  content: "+";
+  flex-shrink: 0;
+  font-size: 1.3rem;
+  font-weight: 400;
+  color: var(--muted);
+  transition: transform 0.25s ease;
+}
+
+.faq-item[open] summary::after {
+  transform: rotate(45deg);
+}
+
+.faq-item p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
 }
 
 /* ---------- legal page ---------- */
