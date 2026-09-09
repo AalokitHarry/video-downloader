@@ -146,6 +146,15 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
     tmp_dir = tempfile.mkdtemp(dir=downloads_dir)
     outtmpl = os.path.join(tmp_dir, "%(title).150B [%(id)s].%(ext)s")
 
+    # yt-dlp's own default client list on cloud IPs (confirmed on the live
+    # deployment: "visionos" gets a flat 403) doesn't reach "web" at all in
+    # practice, even with a JS runtime present. bgutil-ytdlp-pot-provider
+    # generates BotGuard tokens, which are only valid for the "web" client
+    # (each client family -- web/BotGuard, android/DroidGuard, ios/iOSGuard --
+    # needs its own token type), so pin to the one client our PO token
+    # provider can actually authenticate.
+    youtube_extractor_args = {"youtube": {"player_client": ["web"]}}
+
     if audio_only:
         ydl_opts = {
             "format": "bestaudio/best",
@@ -163,6 +172,7 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
             "retries": 3,
             "socket_timeout": 30,
             "ffmpeg_location": FFMPEG_PATH,
+            "extractor_args": youtube_extractor_args,
         }
     else:
         ydl_opts = {
@@ -176,6 +186,7 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
             "retries": 3,
             "socket_timeout": 30,
             "ffmpeg_location": FFMPEG_PATH,
+            "extractor_args": youtube_extractor_args,
         }
 
     try:
