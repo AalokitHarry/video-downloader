@@ -281,6 +281,10 @@ body {
   .ad-banner {
     min-height: 60px;
   }
+
+  .ad-top {
+    display: none;
+  }
 }
 
 .card {
