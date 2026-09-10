@@ -32,10 +32,7 @@ download_lock = threading.Lock()
 @app.before_request
 def _redirect_to_canonical_host():
     host = request.host.split(":")[0]
-    # TEMPORARY: video-downloader-us is a candidate replacement region being
-    # tested directly by its Render hostname before DNS cuts over -- remove
-    # this line once that migration is decided either way.
-    if host in (CANONICAL_HOST, "localhost", "127.0.0.1", "video-downloader-us.onrender.com"):
+    if host in (CANONICAL_HOST, "localhost", "127.0.0.1"):
         return None
     target = f"https://{CANONICAL_HOST}{request.full_path if request.query_string else request.path}"
     return redirect(target, code=308)
