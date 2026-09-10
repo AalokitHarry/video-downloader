@@ -30,6 +30,10 @@ _OG_IMAGE_RE_ALT = re.compile(
     r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']', re.IGNORECASE
 )
 
+_YOUTUBE_RE = re.compile(
+    r"^https?://(?:www\.|m\.)?(?:youtube\.com|youtu\.be)/", re.IGNORECASE
+)
+
 # X/Twitter's syndication endpoint is what their own embed widgets use --
 # public and unauthenticated by design, unlike Instagram's deprecated
 # oEmbed (checked: it now redirects, requiring a Facebook app token since
@@ -190,6 +194,16 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
             "ffmpeg_location": FFMPEG_PATH,
             "extractor_args": youtube_extractor_args,
         }
+
+    if _YOUTUBE_RE.match(url):
+        # Cloudflare WARP running in proxy mode (see start.sh) -- this
+        # container's own IP gets an immediate 429 from YouTube regardless of
+        # client/token fixes (confirmed: identical failure on two different
+        # Render regions), so route just YouTube's traffic through Cloudflare's
+        # network instead. If WARP never came up, this just fails as a normal
+        # connection error -- doesn't affect TikTok/Instagram/X/Facebook,
+        # which don't set this option.
+        ydl_opts["proxy"] = "socks5://127.0.0.1:40000"
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
