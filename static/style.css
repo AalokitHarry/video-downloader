@@ -210,21 +210,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 22px;
-}
-
-.site-logo svg {
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
+  margin-bottom: 30px;
 }
 
 .site-logo-text {
-  font-size: 1.3rem;
+  font-size: clamp(2.6rem, 7vw, 3.4rem);
   font-weight: 800;
-  letter-spacing: 0.03em;
-  color: var(--text);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* ---------- ad slots ---------- */
