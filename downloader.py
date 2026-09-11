@@ -150,15 +150,14 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
     tmp_dir = tempfile.mkdtemp(dir=downloads_dir)
     outtmpl = os.path.join(tmp_dir, "%(title).150B [%(id)s].%(ext)s")
 
-    # "web" hits LOGIN_REQUIRED even over the WARP proxy below -- confirmed
-    # via verbose logs that yt-dlp never even attempts a PO token fetch for
-    # this failure path, so bgutil-ytdlp-pot-provider isn't the fix here.
-    # "tv" is documented as not requiring a PO token at all, unlike
-    # web/mweb/android -- worth trying first now that WARP (see start.sh)
-    # gives it a clean IP instead of this container's own flagged one.
-    # Falls back to "web" (with whatever PO token bgutil can provide) if tv
-    # ever fails for an unrelated reason.
-    youtube_extractor_args = {"youtube": {"player_client": ["tv", "web"]}}
+    # yt-dlp's own default client list on cloud IPs (confirmed on the live
+    # deployment: "visionos" gets a flat 403) doesn't reach "web" at all in
+    # practice, even with a JS runtime present. bgutil-ytdlp-pot-provider
+    # generates BotGuard tokens, which are only valid for the "web" client
+    # (each client family -- web/BotGuard, android/DroidGuard, ios/iOSGuard --
+    # needs its own token type), so pin to the one client our PO token
+    # provider can actually authenticate.
+    youtube_extractor_args = {"youtube": {"player_client": ["web"]}}
 
     if audio_only:
         ydl_opts = {
