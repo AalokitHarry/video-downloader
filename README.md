@@ -4,9 +4,9 @@ A local web app: paste a link, choose Video, MP3, or Photo, click Download,
 get the highest-quality file saved to your machine. No ads, no watermarks,
 no accounts.
 
-Powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp), which supports YouTube
-(including Shorts), TikTok, Instagram, X/Twitter, Facebook, and hundreds of
-other sites.
+Powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp), which supports TikTok,
+Instagram, X/Twitter, Facebook, and hundreds of other sites. YouTube is
+deliberately excluded -- see "Why not YouTube" below.
 
 ## Prerequisites
 
@@ -36,19 +36,39 @@ processes one download at a time.
 
 ## Supported sites
 
-YouTube (including Shorts) works reliably anonymously. Instagram and
-X/Twitter are hit-or-miss: both increasingly gate video playback behind a
-login even for their own website, not just for tools like this one — if a
-link from either fails with "may be private, age-restricted, or unavailable,"
-that's almost always why, not a bug. This tool intentionally doesn't support
-logging in with credentials/cookies to keep things simple and account-free.
+Instagram and X/Twitter are hit-or-miss: both increasingly gate video
+playback behind a login even for their own website, not just for tools like
+this one — if a link from either fails with "may be private, age-restricted,
+or unavailable," that's almost always why, not a bug. This tool intentionally
+doesn't support logging in with credentials/cookies to keep things simple and
+account-free.
 
 TikTok is fine on most networks, but it's been under an ISP-level block in
 some countries (India since 2020, still in effect as of 2026) — if every
-TikTok link fails while YouTube works fine on the same connection, that's a
-network-level block, not something this app (or a yt-dlp update) can fix.
+TikTok link fails on an otherwise-working connection, that's a network-level
+block, not something this app (or a yt-dlp update) can fix.
 
 Facebook works for public videos and Watch links the same way as the others.
+
+## Why not YouTube
+
+YouTube links are rejected outright (see `_YOUTUBE_RE` in `downloader.py`)
+rather than attempted and left to fail. This was tested extensively, not
+assumed: on a hosted deployment, YouTube blocks the request at the network
+level (`429`/`403`) before any client-selection, PO-token, or bot-check logic
+even runs — confirmed identical across two different Render regions, so it's
+not one datacenter's IP range, it's cloud/datacenter IPs in general. Routing
+just the YouTube traffic through a Cloudflare WARP proxy got past that
+network block, but then hit YouTube's session-level "Sign in to confirm
+you're not a bot" check instead (on both the `tv` and `web` clients, so it
+wasn't a missing-PO-token problem either) — and running WARP as a third
+background process alongside the app crashed the container under real load
+on a free-tier instance's limited RAM. Net effect: no workaround tried
+actually got a video through, while one of them made the whole app less
+stable. Rejecting YouTube up front keeps the failure fast and honest instead
+of silently retrying a losing battle. If this ever gets revisited, the real
+options are a paid residential-proxy service, or feeding yt-dlp real
+authenticated cookies from a dedicated (not personal) YouTube account.
 
 ## How Photo mode works
 
@@ -124,21 +144,6 @@ server, unlike the Flask dev server used for local runs). These hosts still
 need ffmpeg available in the build environment — check whether your platform
 lets you add an apt package/buildpack for it, or prefer the Docker path
 above if it doesn't.
-
-**YouTube and cloud hosting don't mix well by default.** Confirmed directly
-against a real deployment: YouTube serves `Sign in to confirm you're not a
-bot` to cloud/datacenter IP ranges (Cloud Run, AWS, Azure, etc.) far more
-readily than to a residential connection — this doesn't show up testing
-locally, only once actually hosted. The Docker path bundles a fix for this:
-[bgutil-ytdlp-pot-provider](https://github.com/Brainicism/bgutil-ytdlp-pot-provider),
-a proof-of-origin token generator that runs alongside the app in the same
-container (`start.sh`) and makes the traffic look legitimate to YouTube —
-not a guaranteed fix (the project's own README says as much), but the
-actively-maintained community answer to this exact problem. **This only
-works via the Docker path** — the Procfile (buildpack, no Docker) runs
-`waitress-serve` directly with no token provider alongside it, so YouTube
-downloads should be expected to fail on a buildpack-based host without
-extra work.
 
 **Before you make it public**, two things to know:
 - The dev-server safeguard that binds to `127.0.0.1` only applies to

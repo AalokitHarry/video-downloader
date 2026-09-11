@@ -16,6 +16,15 @@ FFMPEG_PATH = shutil.which("ffmpeg")
 
 _URL_RE = re.compile(r"^https?://", re.IGNORECASE)
 
+# YouTube is deliberately unsupported: on this host it's reliably blocked by
+# YouTube's cloud/datacenter-IP bot-check regardless of client, PO token
+# provider, or proxy workaround tried (confirmed extensively against this
+# exact deployment) -- rejecting it outright up front gives a clear message
+# instead of a slow, confusing failure through the rest of the pipeline.
+_YOUTUBE_RE = re.compile(
+    r"^https?://(?:www\.|m\.)?(?:youtube\.com|youtu\.be)/", re.IGNORECASE
+)
+
 # yt-dlp's Instagram/Twitter extractors hard-fail on photo-only posts --
 # confirmed by testing, not assumed -- so photo mode bypasses yt-dlp
 # entirely and fetches the same og:image preview tag that link-preview
@@ -80,6 +89,10 @@ def validate_url(url: str) -> str:
     url = (url or "").strip()
     if not url or not _URL_RE.match(url):
         raise DownloadUserError("Please paste a valid video URL.")
+    if _YOUTUBE_RE.match(url):
+        raise DownloadUserError(
+            "YouTube isn't supported right now — try TikTok, Instagram, X, or Facebook."
+        )
     return url
 
 
@@ -87,7 +100,7 @@ def _categorize_download_error(e: yt_dlp.utils.DownloadError) -> Exception:
     msg = str(e).lower()
     if any(kw in msg for kw in ("unsupported url", "no extractor", "is not a valid url")):
         return DownloadUserError(
-            "This link isn't supported. Try YouTube, TikTok, Instagram, or X/Twitter."
+            "This link isn't supported. Try TikTok, Instagram, X/Twitter, or Facebook."
         )
     if any(
         kw in msg
@@ -146,15 +159,6 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
     tmp_dir = tempfile.mkdtemp(dir=downloads_dir)
     outtmpl = os.path.join(tmp_dir, "%(title).150B [%(id)s].%(ext)s")
 
-    # yt-dlp's own default client list on cloud IPs (confirmed on the live
-    # deployment: "visionos" gets a flat 403) doesn't reach "web" at all in
-    # practice, even with a JS runtime present. bgutil-ytdlp-pot-provider
-    # generates BotGuard tokens, which are only valid for the "web" client
-    # (each client family -- web/BotGuard, android/DroidGuard, ios/iOSGuard --
-    # needs its own token type), so pin to the one client our PO token
-    # provider can actually authenticate.
-    youtube_extractor_args = {"youtube": {"player_client": ["web"]}}
-
     if audio_only:
         ydl_opts = {
             "format": "bestaudio/best",
@@ -167,13 +171,11 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
                     "preferredquality": "192",
                 }
             ],
-            "quiet": False,
-            "no_warnings": False,
-            "verbose": True,
+            "quiet": True,
+            "no_warnings": True,
             "retries": 3,
             "socket_timeout": 30,
             "ffmpeg_location": FFMPEG_PATH,
-            "extractor_args": youtube_extractor_args,
         }
     else:
         ydl_opts = {
@@ -182,13 +184,11 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
             "merge_output_format": "mp4",
             "noplaylist": True,
             "outtmpl": outtmpl,
-            "quiet": False,
-            "no_warnings": False,
-            "verbose": True,
+            "quiet": True,
+            "no_warnings": True,
             "retries": 3,
             "socket_timeout": 30,
             "ffmpeg_location": FFMPEG_PATH,
-            "extractor_args": youtube_extractor_args,
         }
 
     try:
