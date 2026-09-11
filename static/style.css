@@ -204,6 +204,29 @@ body {
   align-items: center;
 }
 
+/* ---------- site logo ---------- */
+
+.site-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.site-logo svg {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.site-logo-text {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--text);
+}
+
 /* ---------- ad slots ---------- */
 
 .ad-slot {
