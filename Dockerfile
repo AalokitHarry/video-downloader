@@ -1,26 +1,10 @@
 FROM python:3.12-slim
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg git curl gnupg unzip lsb-release dbus \
+    && apt-get install -y --no-install-recommends ffmpeg git curl gnupg unzip \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
-
-# Cloudflare WARP, run in "proxy mode" (a local SOCKS5 proxy backed by
-# Cloudflare's network, not a full system VPN) -- YouTube's bot-check treats
-# Cloudflare's consumer-VPN IP range differently than flagged cloud/datacenter
-# ranges like this container's own. Proxy mode needs no elevated container
-# capabilities (no NET_ADMIN/TUN device), unlike a real WireGuard tunnel,
-# which is what makes it usable on a sandboxed host like this one. Only
-# YouTube requests get routed through it (see downloader.py); every other
-# site continues to exit directly, unaffected if this ever misbehaves.
-RUN curl https://pkg.cloudflareclient.com/pubkey.gpg | gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg \
-    && echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/cloudflare-client.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends cloudflare-warp \
-    && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /root/.local/share/warp \
-    && echo -n 'yes' > /root/.local/share/warp/accepted-tos.txt
 
 # Deno: the JS runtime yt-dlp's YouTube extractor needs to solve signature/EJS
 # challenges (https://github.com/yt-dlp/yt-dlp/wiki/EJS). Without it, yt-dlp
