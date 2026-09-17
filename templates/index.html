@@ -2,12 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+// Applied before first paint to avoid a flash of the wrong theme. Only
+// sets the attribute when the visitor has explicitly chosen a theme before
+// (via the toggle button) -- otherwise CSS's prefers-color-scheme handles
+// the default, so a first-time visitor still gets their OS preference.
+(function () {
+  try {
+    var stored = localStorage.getItem("theme");
+    if (stored === "light" || stored === "dark") {
+      document.documentElement.setAttribute("data-theme", stored);
+    }
+  } catch (e) {}
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Video Downloader — TikTok, Instagram, Pinterest &amp; More</title>
 <meta name="description" content="Download videos, MP3 audio, or photos from TikTok, Instagram, Pinterest, Reddit, X and Facebook in the highest quality. 100% free, no sign-up, no watermark.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://aiod.online/">
-<meta name="theme-color" content="#0b0b12">
+<meta name="theme-color" content="#0b0b12" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f4f8" media="(prefers-color-scheme: light)">
 <meta name="google-adsense-account" content="ca-pub-5271255119909349">
 
 <meta property="og:type" content="website">
@@ -148,6 +163,16 @@
     </span>
   </div>
 
+  <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch to light theme">
+    <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.3" stroke="currentColor" stroke-width="1.8"/>
+      <path d="M12 2.5v2.6M12 18.9v2.6M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M20.5 14.7A8.5 8.5 0 1 1 9.3 3.5a7 7 0 0 0 11.2 11.2z" fill="currentColor"/>
+    </svg>
+  </button>
+
   <div class="layout">
     <!-- AdSense manual ad unit "ver01", 160x600. Desktop only. -->
     <aside class="ad-mount ad-skyscraper reveal" style="--d:0">
@@ -160,7 +185,8 @@
 
     <main class="wrap">
       <div class="site-logo reveal" style="--d:0">
-        <img src="{{ url_for('static', filename='logo-aiod.png') }}" alt="AIOD" class="site-logo-img">
+        <img src="{{ url_for('static', filename='logo-aiod.png') }}" alt="AIOD" class="site-logo-img site-logo-img-dark">
+        <img src="{{ url_for('static', filename='logo-aiod-light.png') }}" alt="AIOD" class="site-logo-img site-logo-img-light">
       </div>
       <p class="site-tagline reveal" style="--d:0">Download Anything Anywhere</p>
 
