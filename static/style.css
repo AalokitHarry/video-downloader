@@ -214,32 +214,10 @@ body {
   margin-bottom: 10px;
 }
 
-.site-logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
-  box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--accent-a) 70%, transparent);
-}
-
-.site-logo-icon svg {
-  width: 19px;
-  height: 19px;
-}
-
-.site-logo-text {
-  font-size: clamp(1.9rem, 5vw, 2.3rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.site-logo-img {
+  height: clamp(44px, 9vw, 60px);
+  width: auto;
+  display: block;
 }
 
 .site-tagline {
