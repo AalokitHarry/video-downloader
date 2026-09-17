@@ -703,20 +703,41 @@ h1 {
 }
 
 .platforms span {
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: var(--muted);
-  padding: 6px 12px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+  padding: 7px 14px 7px 12px;
   border-radius: 999px;
   border: 1px solid var(--card-border);
-  transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  background: var(--input-bg);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.platforms span::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--dot, var(--accent-a));
 }
 
 .platforms span:hover {
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--accent-a) 40%, var(--card-border));
   transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--dot, var(--accent-a)) 45%, var(--card-border));
+  background: color-mix(in srgb, var(--dot, var(--accent-a)) 14%, var(--input-bg));
 }
+
+.plat-tiktok { --dot: #fe2c55; }
+.plat-instagram::before { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); }
+.plat-pinterest { --dot: #e60023; }
+.plat-reddit { --dot: #ff4500; }
+.plat-x { --dot: #e7e9ea; }
+.plat-facebook { --dot: #1877f2; }
 
 .footnote {
   margin: 22px 0 0;
