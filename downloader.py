@@ -7,6 +7,7 @@ import re
 import shutil
 import tempfile
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 
@@ -61,6 +62,17 @@ _INSTAGRAM_RE = re.compile(
 )
 _IG_SIDECAR_ITEM_RE = re.compile(
     r'\\"shortcode\\":\\"([^"\\]+)\\".*?\\"display_url\\":\\"(.*?)\\"'
+)
+
+# Pinterest serves no og:image (or any other image tag) to crawlers -- its
+# pin pages are client-rendered, confirmed directly, not assumed -- so the
+# generic og:image fallback below can't reach it either. Its own PinResource
+# API (the same undocumented endpoint yt-dlp's Pinterest extractor calls
+# internally for video pins) is public and unauthenticated, and returns a
+# sized image ladder up to "orig" for any pin, video or photo.
+_PINTEREST_RE = re.compile(
+    r"^https?://(?:[\w-]+\.)?pinterest\.[a-z.]+/pin/[\w-]*?(\d+)/?(?:[?#].*)?$",
+    re.IGNORECASE,
 )
 
 
@@ -354,12 +366,63 @@ def _download_instagram_photos(shortcode: str, downloads_dir: str) -> tuple[str,
     return _save_all(photo_urls, tmp_dir)
 
 
+def _download_pinterest_photo(pin_id: str, downloads_dir: str) -> tuple[str, str]:
+    options = {"id": pin_id, "field_set_key": "unauth_react_main_pin"}
+    api_url = (
+        "https://www.pinterest.com/resource/PinResource/get/?data="
+        + urllib.parse.quote(json.dumps({"options": options}))
+    )
+    req = urllib.request.Request(
+        api_url,
+        headers={
+            "User-Agent": "Mozilla/5.0",
+            "X-Pinterest-PWS-Handler": "www/[username].js",
+            "Accept": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            body = resp.read()
+    except urllib.error.URLError as e:
+        raise DownloadNetworkError(
+            "Network error while fetching the pin. Check your connection and try again."
+        ) from e
+
+    try:
+        pin_data = json.loads(body)["resource_response"]["data"]
+        images = pin_data["images"]
+    except Exception as e:
+        raise DownloadServerError(f"Unexpected response from Pinterest: {e}") from e
+
+    # "orig" is the unscaled original; every pin (photo or video) carries a
+    # full sized-image ladder here regardless, confirmed directly.
+    image_url = (images.get("orig") or {}).get("url")
+    if not image_url:
+        raise DownloadUserError(
+            "Couldn't find a photo on this pin — it may have been removed."
+        )
+
+    tmp_dir = tempfile.mkdtemp(dir=downloads_dir)
+    try:
+        filepath = _save_image(image_url, tmp_dir, "photo")
+    except DownloadNetworkError:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        raise
+    except Exception as e:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        raise DownloadServerError(f"Failed to download the photo: {e}") from e
+
+    return filepath, tmp_dir
+
+
 def download_photo(url: str, downloads_dir: str) -> tuple[str, str]:
     """Fetch the photo(s) for the given post URL: all of them for X/Twitter
     (via its public syndication endpoint) and Instagram (via its embed
-    widget page), zipped together if there's more than one. Everything else
-    falls back to the single og:image preview, the only image other sites
-    expose without logging in (see README "How Photo mode works").
+    widget page), zipped together if there's more than one; the single
+    original-resolution image for Pinterest (via its PinResource API).
+    Everything else falls back to the single og:image preview, the only
+    image other sites expose without logging in (see README "How Photo
+    mode works").
 
     Returns (filepath, tmp_dir). Caller owns cleanup of tmp_dir.
     Raises DownloadUserError / DownloadNetworkError / DownloadServerError.
@@ -376,6 +439,10 @@ def download_photo(url: str, downloads_dir: str) -> tuple[str, str]:
         if result is not None:
             return result
         # fall through to the generic og:image path below
+
+    pinterest_match = _PINTEREST_RE.match(url)
+    if pinterest_match:
+        return _download_pinterest_photo(pinterest_match.group(1), downloads_dir)
 
     try:
         page_bytes, _ = _fetch(url, max_bytes=3_000_000)

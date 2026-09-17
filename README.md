@@ -5,8 +5,8 @@ get the highest-quality file saved to your machine. No ads, no watermarks,
 no accounts.
 
 Powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp), which supports TikTok,
-Instagram, X/Twitter, Facebook, and hundreds of other sites. YouTube is
-deliberately excluded -- see "Why not YouTube" below.
+Instagram, Pinterest, Reddit, X/Twitter, Facebook, and hundreds of other
+sites. YouTube is deliberately excluded -- see "Why not YouTube" below.
 
 ## Prerequisites
 
@@ -50,6 +50,10 @@ block, not something this app (or a yt-dlp update) can fix.
 
 Facebook works for public videos and Watch links the same way as the others.
 
+Pinterest and Reddit both work reliably without logging in — video pins/posts
+download through yt-dlp same as everything else, and photo pins/posts through
+Photo mode (see below).
+
 ## Why not YouTube
 
 YouTube links are rejected outright (see `_YOUTUBE_RE` in `downloader.py`)
@@ -76,7 +80,7 @@ Photo mode intentionally doesn't use yt-dlp. yt-dlp (what Video/MP3 run on)
 hard-fails on photo-only posts on both Instagram and X rather than falling
 back to the image (e.g. `No video could be found in this tweet`) — confirmed
 by testing directly, not assumed, and true even with yt-dlp's own
-thumbnail-only download path. So Photo mode bypasses it, with three
+thumbnail-only download path. So Photo mode bypasses it, with four
 different paths depending on the site:
 
 - **X/Twitter**: uses the public `cdn.syndication.twimg.com` endpoint --
@@ -91,7 +95,15 @@ different paths depending on the site:
   spirit as the `og:image` extraction below, just against a richer field.
   Verified against a real 6-slide carousel: all 6 came back as distinct,
   valid, higher-resolution images than the `og:image` fallback gives.
-- **Everything else** (Facebook, ...): falls back to the `og:image`
+- **Pinterest**: uses its `PinResource` API (`/resource/PinResource/get/`)
+  -- the same undocumented, unauthenticated endpoint Pinterest's own site
+  calls client-side, and the one yt-dlp's own Pinterest extractor calls
+  internally for video pins. Needed because Pinterest pin pages are fully
+  client-rendered and serve no `og:image` (or any other image tag) to a
+  plain request -- confirmed directly, not assumed, so the generic fallback
+  below can't reach it. The response includes a sized image ladder up to
+  `orig` (the unscaled original) for any pin, photo or video.
+- **Everything else** (Facebook, Reddit, ...): falls back to the `og:image`
   preview tag, the same one link-preview crawlers (Slack, iMessage,
   WhatsApp) use -- requesting the page while identifying as one of those
   crawlers is what unlocks it, since these sites serve Open Graph tags to
@@ -102,18 +114,21 @@ different paths depending on the site:
   embed-page extraction ever comes up empty.
 
 X and Instagram both zip the result into `photos.zip` when there's more
-than one photo; a single photo still downloads as one plain file either way.
+than one photo; Pinterest only ever returns the one pin image, and a single
+photo from any site downloads as one plain file either way.
 
-The line drawn here: `og:image`, X's syndication endpoint, and Instagram's
-embed-widget page are all things each site actively serves and maintains
-for exactly this kind of third-party use (link previews, embeds). Instagram's
-*oEmbed* API is different -- Meta deliberately locked it behind an app
-token -- so this app doesn't try to route around that one.
+The line drawn here: `og:image`, X's syndication endpoint, Instagram's
+embed-widget page, and Pinterest's `PinResource` API are all things each
+site actively serves and maintains for exactly this kind of third-party use
+(link previews, embeds, or -- for Pinterest -- their own site's own
+rendering). Instagram's *oEmbed* API is different -- Meta deliberately
+locked it behind an app token -- so this app doesn't try to route around
+that one.
 
 See `download_photo()` in `downloader.py`. All of this depends on each
 site continuing to serve these endpoints/tags/formats the way it does
-today, which could change without notice -- truer for Instagram's
-undocumented internal format than for the other two.
+today, which could change without notice -- truer for Instagram's and
+Pinterest's undocumented internal formats than for the other two.
 
 ## No length limit, by design
 
