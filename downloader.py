@@ -206,7 +206,14 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
         }
 
     if _YOUTUBE_RE.match(url) and os.path.exists(_YOUTUBE_COOKIES_FILE):
-        ydl_opts["cookiefile"] = _YOUTUBE_COOKIES_FILE
+        # yt-dlp writes refreshed session cookies back to this same path
+        # after use -- Render's Secret Files are mounted read-only, so
+        # pointing cookiefile straight at it fails with "Read-only file
+        # system" (confirmed directly). Copy it into this call's own
+        # tmp_dir (writable, already cleaned up after) and use that copy.
+        writable_cookies = os.path.join(tmp_dir, "youtube_cookies.txt")
+        shutil.copyfile(_YOUTUBE_COOKIES_FILE, writable_cookies)
+        ydl_opts["cookiefile"] = writable_cookies
         # "web" is the client an authenticated cookie jar actually applies
         # to and gives the best format/quality selection -- no PO token
         # provider needed this time since a real logged-in session is the
