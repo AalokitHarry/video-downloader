@@ -160,35 +160,3 @@ form.addEventListener("submit", async (e) => {
 cancelBtn.addEventListener("click", () => {
   if (activeController) activeController.abort();
 });
-
-// Theme toggle: explicit choice always overrides the OS preference once
-// made, persisted so it sticks across visits. No stored choice = follow
-// prefers-color-scheme (handled entirely in CSS, nothing to do here).
-const themeToggle = document.getElementById("theme-toggle");
-const systemPrefersLight = window.matchMedia("(prefers-color-scheme: light)");
-
-function isCurrentlyLight() {
-  const stored = document.documentElement.getAttribute("data-theme");
-  return stored ? stored === "light" : systemPrefersLight.matches;
-}
-
-function updateThemeToggleLabel() {
-  themeToggle.setAttribute(
-    "aria-label",
-    isCurrentlyLight() ? "Switch to dark theme" : "Switch to light theme"
-  );
-}
-
-themeToggle.addEventListener("click", () => {
-  const next = isCurrentlyLight() ? "dark" : "light";
-  document.documentElement.setAttribute("data-theme", next);
-  try {
-    localStorage.setItem("theme", next);
-  } catch (e) {}
-  updateThemeToggleLabel();
-});
-
-updateThemeToggleLabel();
-systemPrefersLight.addEventListener("change", () => {
-  if (!document.documentElement.getAttribute("data-theme")) updateThemeToggleLabel();
-});
