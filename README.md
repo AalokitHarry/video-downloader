@@ -40,9 +40,11 @@ processes one download at a time.
 Instagram and X/Twitter are hit-or-miss: both increasingly gate video
 playback behind a login even for their own website, not just for tools like
 this one — if a link from either fails with "may be private, age-restricted,
-or unavailable," that's almost always why, not a bug. This tool intentionally
-doesn't support logging in with credentials/cookies to keep things simple and
-account-free.
+or unavailable," that's almost always why, not a bug. This tool doesn't
+support logging in with your own credentials/cookies for any site -- the one
+exception is YouTube, which uses a server-side account set up by whoever
+hosts this deployment, not anything tied to an individual visitor (see
+"YouTube" below).
 
 TikTok is fine on most networks, but it's been under an ISP-level block in
 some countries (India since 2020, still in effect as of 2026) — if every
@@ -67,16 +69,28 @@ confirm you're not a bot" check instead — and running WARP as a third
 background process crashed the container under real load on a free-tier
 instance's limited RAM. Both ruled out.
 
-What's left, and what's wired up now: real authenticated cookies from a
-logged-in YouTube session, read from `cookiefile` (see `_YOUTUBE_COOKIES_FILE`
-in `downloader.py`). A valid session is the actual signal that "sign in to
-confirm you're not a bot" check wants, independent of IP reputation, so it
-should succeed where every anonymous attempt failed. The cookies file is
-never committed to source -- it's provided via the host's secret-file
-mechanism (e.g. Render's Secret Files, mounted at `/etc/secrets/`) so it
-never touches git history or a public repo. If that path doesn't exist
-(e.g. running locally without setting one up), YouTube requests just fail
-the normal way instead of crashing.
+What works, confirmed against the live deployment (multiple videos, both
+Video and MP3 modes), not assumed: real authenticated cookies from a
+logged-in YouTube session, read from `cookiefile` (see
+`_YOUTUBE_COOKIES_FILE` in `downloader.py`). A valid session is the actual
+signal that "sign in to confirm you're not a bot" check wants, independent
+of IP reputation, and it holds up where every anonymous attempt failed.
+Getting there also needed Deno back (see the Dockerfile) -- cookies clear
+the bot-check, but yt-dlp still needs a JS runtime to solve YouTube's
+signature challenges when resolving format URLs, or extraction succeeds
+with zero usable formats.
+
+The cookies file is never committed to source -- it's provided via the
+host's secret-file mechanism (e.g. Render's Secret Files, mounted at
+`/etc/secrets/`) so it never touches git history or a public repo. yt-dlp
+writes refreshed session cookies back to whatever path it's given after
+use, and that mount is read-only, so `downloader.py` copies it into each
+request's own (writable, already-cleaned-up) tmp dir before use rather
+than pointing `cookiefile` at the secret path directly -- confirmed
+necessary directly (crashed with `[Errno 30] Read-only file system`
+without it). If the secret file isn't present at all (e.g. running
+locally without setting one up), YouTube requests just fail the normal
+way instead of crashing.
 
 **A real risk to know about**: this ties one actual Google account's
 session to the server. Automated-looking traffic at volume could get that

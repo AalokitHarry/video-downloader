@@ -927,6 +927,7 @@ h1 {
   background: color-mix(in srgb, var(--dot, var(--accent-a)) 14%, var(--input-bg));
 }
 
+.plat-youtube { --dot: #ff0000; }
 .plat-tiktok { --dot: #fe2c55; }
 .plat-instagram::before { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); }
 .plat-pinterest { --dot: #e60023; }
