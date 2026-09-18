@@ -17,14 +17,20 @@ FFMPEG_PATH = shutil.which("ffmpeg")
 
 _URL_RE = re.compile(r"^https?://", re.IGNORECASE)
 
-# YouTube is deliberately unsupported: on this host it's reliably blocked by
-# YouTube's cloud/datacenter-IP bot-check regardless of client, PO token
-# provider, or proxy workaround tried (confirmed extensively against this
-# exact deployment) -- rejecting it outright up front gives a clear message
-# instead of a slow, confusing failure through the rest of the pipeline.
+# Every anonymous approach tried against YouTube failed on this host --
+# network-level blocks on cloud IPs (confirmed across two Render regions),
+# and even a Cloudflare WARP proxy that got past that just hit a softer
+# "sign in to confirm you're not a bot" check instead. Authenticated cookies
+# from a real logged-in session are the one thing that check is actually
+# checking for, so that's the approach now: yt-dlp gets a cookies.txt file
+# via Render's Secret Files (never committed to source -- see README), read
+# from COOKIES_FILE below only if it's actually present, so a deployment
+# without cookies configured just falls back to failing normally instead of
+# crashing.
 _YOUTUBE_RE = re.compile(
     r"^https?://(?:www\.|m\.)?(?:youtube\.com|youtu\.be)/", re.IGNORECASE
 )
+_YOUTUBE_COOKIES_FILE = "/etc/secrets/youtube_cookies.txt"
 
 # yt-dlp's Instagram/Twitter extractors hard-fail on photo-only posts --
 # confirmed by testing, not assumed -- so photo mode bypasses yt-dlp
@@ -101,10 +107,6 @@ def validate_url(url: str) -> str:
     url = (url or "").strip()
     if not url or not _URL_RE.match(url):
         raise DownloadUserError("Please paste a valid video URL.")
-    if _YOUTUBE_RE.match(url):
-        raise DownloadUserError(
-            "YouTube isn't supported right now — try TikTok, Instagram, X, or Facebook."
-        )
     return url
 
 
@@ -112,7 +114,7 @@ def _categorize_download_error(e: yt_dlp.utils.DownloadError) -> Exception:
     msg = str(e).lower()
     if any(kw in msg for kw in ("unsupported url", "no extractor", "is not a valid url")):
         return DownloadUserError(
-            "This link isn't supported. Try TikTok, Instagram, X/Twitter, or Facebook."
+            "This link isn't supported. Try YouTube, TikTok, Instagram, X/Twitter, or Facebook."
         )
     if any(
         kw in msg
@@ -202,6 +204,14 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
             "socket_timeout": 30,
             "ffmpeg_location": FFMPEG_PATH,
         }
+
+    if _YOUTUBE_RE.match(url) and os.path.exists(_YOUTUBE_COOKIES_FILE):
+        ydl_opts["cookiefile"] = _YOUTUBE_COOKIES_FILE
+        # "web" is the client an authenticated cookie jar actually applies
+        # to and gives the best format/quality selection -- no PO token
+        # provider needed this time since a real logged-in session is the
+        # stronger signal the earlier anonymous attempts were missing.
+        ydl_opts["extractor_args"] = {"youtube": {"player_client": ["web"]}}
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

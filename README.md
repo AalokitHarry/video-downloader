@@ -4,9 +4,10 @@ A local web app: paste a link, choose Video, MP3, or Photo, click Download,
 get the highest-quality file saved to your machine. No ads, no watermarks,
 no accounts.
 
-Powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp), which supports TikTok,
-Instagram, Pinterest, Reddit, X/Twitter, Facebook, and hundreds of other
-sites. YouTube is deliberately excluded -- see "Why not YouTube" below.
+Powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp), which supports
+YouTube, TikTok, Instagram, Pinterest, Reddit, X/Twitter, Facebook, and
+hundreds of other sites. YouTube needs a bit more explanation -- see
+"YouTube" below.
 
 ## Prerequisites
 
@@ -54,25 +55,36 @@ Pinterest and Reddit both work reliably without logging in — video pins/posts
 download through yt-dlp same as everything else, and photo pins/posts through
 Photo mode (see below).
 
-## Why not YouTube
+## YouTube
 
-YouTube links are rejected outright (see `_YOUTUBE_RE` in `downloader.py`)
-rather than attempted and left to fail. This was tested extensively, not
-assumed: on a hosted deployment, YouTube blocks the request at the network
-level (`429`/`403`) before any client-selection, PO-token, or bot-check logic
-even runs — confirmed identical across two different Render regions, so it's
-not one datacenter's IP range, it's cloud/datacenter IPs in general. Routing
-just the YouTube traffic through a Cloudflare WARP proxy got past that
-network block, but then hit YouTube's session-level "Sign in to confirm
-you're not a bot" check instead (on both the `tv` and `web` clients, so it
-wasn't a missing-PO-token problem either) — and running WARP as a third
-background process alongside the app crashed the container under real load
-on a free-tier instance's limited RAM. Net effect: no workaround tried
-actually got a video through, while one of them made the whole app less
-stable. Rejecting YouTube up front keeps the failure fast and honest instead
-of silently retrying a losing battle. If this ever gets revisited, the real
-options are a paid residential-proxy service, or feeding yt-dlp real
-authenticated cookies from a dedicated (not personal) YouTube account.
+Every *anonymous* approach failed on this host, tested extensively, not
+assumed: a plain request gets network-blocked (`429`/`403`) before any
+client-selection or bot-check logic even runs, identical across two
+different Render regions, so it's cloud/datacenter IPs in general, not one
+region's range. Routing traffic through a Cloudflare WARP proxy got past
+that network block, but then hit YouTube's session-level "Sign in to
+confirm you're not a bot" check instead — and running WARP as a third
+background process crashed the container under real load on a free-tier
+instance's limited RAM. Both ruled out.
+
+What's left, and what's wired up now: real authenticated cookies from a
+logged-in YouTube session, read from `cookiefile` (see `_YOUTUBE_COOKIES_FILE`
+in `downloader.py`). A valid session is the actual signal that "sign in to
+confirm you're not a bot" check wants, independent of IP reputation, so it
+should succeed where every anonymous attempt failed. The cookies file is
+never committed to source -- it's provided via the host's secret-file
+mechanism (e.g. Render's Secret Files, mounted at `/etc/secrets/`) so it
+never touches git history or a public repo. If that path doesn't exist
+(e.g. running locally without setting one up), YouTube requests just fail
+the normal way instead of crashing.
+
+**A real risk to know about**: this ties one actual Google account's
+session to the server. Automated-looking traffic at volume could get that
+account's YouTube session flagged or restricted by Google -- use a
+secondary/throwaway account for this, not a primary personal one. Export
+cookies with a browser extension (e.g. "Get cookies.txt LOCALLY") while
+logged into youtube.com; sessions expire, so a stale export just fails the
+same way as having none configured.
 
 ## How Photo mode works
 
