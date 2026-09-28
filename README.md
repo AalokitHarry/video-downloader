@@ -211,6 +211,19 @@ above if it doesn't.
   That's fine for light personal use; if this gets real traffic, that's the
   first thing to revisit (e.g. a job queue).
 
+**Free-tier spin-down (Render and similar hosts)**: a free instance sleeps
+after ~15 minutes idle, and the next request pays a 20-60s cold-start
+(the host's own placeholder page, not this app, loads first). Confirmed
+this is more than a UX annoyance: it got the site flagged for AdSense's
+"ads on screens without publisher content" policy, almost certainly from
+their crawler hitting the site mid-sleep. `.github/workflows/keep-alive.yml`
+pings the site on a schedule as a backup, but confirmed directly that
+GitHub Actions' scheduler doesn't reliably hit the interval it's given --
+runs meant to be 10 minutes apart landed 3-8+ hours apart in practice, well
+past the 15-minute spin-down window. An external uptime-ping service (e.g.
+UptimeRobot's free tier, 5-minute interval) is the actual fix; the
+workflow is left in as a low-cost secondary ping, not the primary defense.
+
 ## Troubleshooting
 
 - **A specific site suddenly stopped working**: sites change their internal
