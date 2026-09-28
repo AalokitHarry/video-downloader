@@ -136,6 +136,7 @@ def api_download():
     data = request.get_json(silent=True) or {}
     url = data.get("url", "")
     fmt = data.get("format", "video")
+    quality = data.get("quality", "best")
 
     try:
         url = validate_url(url)
@@ -150,7 +151,9 @@ def api_download():
             if fmt == "photo":
                 filepath, tmp_dir = download_photo(url, DOWNLOADS_DIR)
             else:
-                filepath, tmp_dir = download_video(url, DOWNLOADS_DIR, audio_only=(fmt == "mp3"))
+                filepath, tmp_dir = download_video(
+                    url, DOWNLOADS_DIR, audio_only=(fmt == "mp3"), quality=quality
+                )
         except DownloadUserError as e:
             return jsonify(error=str(e)), 422
         except DownloadNetworkError as e:

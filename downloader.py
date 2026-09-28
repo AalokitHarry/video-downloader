@@ -32,6 +32,12 @@ _YOUTUBE_RE = re.compile(
 )
 _YOUTUBE_COOKIES_FILE = "/etc/secrets/youtube_cookies.txt"
 
+# HLS/DASH sources (X, Reddit, Facebook, some TikTok/Instagram) arrive as
+# hundreds of small fragments that yt-dlp fetches one at a time by default;
+# fetching several at once is a pure speedup on those. No effect on plain
+# single-file downloads.
+_FRAGMENT_CONCURRENCY = 8
+
 # yt-dlp's Instagram/Twitter extractors hard-fail on photo-only posts --
 # confirmed by testing, not assumed -- so photo mode bypasses yt-dlp
 # entirely and fetches the same og:image preview tag that link-preview
@@ -157,9 +163,20 @@ def _categorize_download_error(e: yt_dlp.utils.DownloadError) -> Exception:
     )
 
 
-def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tuple[str, str]:
-    """Download the given URL's media at highest quality, as a single MP4
-    (or MP3, if audio_only is set).
+# Caps applied via yt-dlp's own format-selector syntax (bv*[height<=N]) --
+# harmless no-op on a site/video that never reaches that height anyway,
+# it just settles for whatever's next best below the cap. "best" applies
+# no cap at all.
+_QUALITY_HEIGHTS = {"1080": 1080, "720": 720, "480": 480, "360": 360}
+
+
+def download_video(
+    url: str, downloads_dir: str, audio_only: bool = False, quality: str = "best"
+) -> tuple[str, str]:
+    """Download the given URL's media at the given quality cap (default:
+    highest available), as a single MP4 (or MP3, if audio_only is set).
+    `quality` is one of _QUALITY_HEIGHTS' keys, or anything else for
+    uncapped/best -- ignored entirely when audio_only.
 
     Returns (filepath, tmp_dir). Caller owns cleanup of tmp_dir.
     Raises DownloadUserError / DownloadNetworkError / DownloadServerError.
@@ -189,11 +206,16 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
             "no_warnings": True,
             "retries": 3,
             "socket_timeout": 30,
+            "concurrent_fragment_downloads": _FRAGMENT_CONCURRENCY,
             "ffmpeg_location": FFMPEG_PATH,
         }
     else:
+        height = _QUALITY_HEIGHTS.get(quality)
+        format_selector = (
+            f"bv*[height<={height}]+ba/b[height<={height}]" if height else "bv*+ba/b"
+        )
         ydl_opts = {
-            "format": "bv*+ba/b",
+            "format": format_selector,
             "format_sort": ["res", "ext:mp4:m4a"],
             "merge_output_format": "mp4",
             "noplaylist": True,
@@ -202,6 +224,7 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
             "no_warnings": True,
             "retries": 3,
             "socket_timeout": 30,
+            "concurrent_fragment_downloads": _FRAGMENT_CONCURRENCY,
             "ffmpeg_location": FFMPEG_PATH,
         }
 
@@ -214,11 +237,14 @@ def download_video(url: str, downloads_dir: str, audio_only: bool = False) -> tu
         writable_cookies = os.path.join(tmp_dir, "youtube_cookies.txt")
         shutil.copyfile(_YOUTUBE_COOKIES_FILE, writable_cookies)
         ydl_opts["cookiefile"] = writable_cookies
-        # "web" is the client an authenticated cookie jar actually applies
-        # to and gives the best format/quality selection -- no PO token
-        # provider needed this time since a real logged-in session is the
-        # stronger signal the earlier anonymous attempts were missing.
-        ydl_opts["extractor_args"] = {"youtube": {"player_client": ["web"]}}
+        # Deliberately NOT forcing player_client=["web"] here anymore --
+        # confirmed directly that YouTube now runs a "bind GVS PO Token to
+        # video ID" experiment against the web client that silently drops
+        # every real format ("YouTube is forcing SABR streaming for this
+        # client"), leaving only storyboard images. Letting yt-dlp pick from
+        # its full default client set sidesteps that and reliably recovers
+        # every resolution up to the source's own ceiling -- confirmed
+        # against a real 4K60 video, cookies still attached throughout.
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

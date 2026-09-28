@@ -100,6 +100,21 @@ cookies with a browser extension (e.g. "Get cookies.txt LOCALLY") while
 logged into youtube.com; sessions expire, so a stale export just fails the
 same way as having none configured.
 
+**Quality selection and why the player client is no longer pinned**:
+`downloader.py` used to force `player_client=["web"]` on the theory that
+it's the one client the cookie jar actually applies to. That's since gone
+stale -- confirmed directly, YouTube now runs an experiment that binds a
+PO token to the video ID specifically for the web client and silently
+drops every real format when it triggers ("YouTube is forcing SABR
+streaming for this client"), leaving only storyboard-image placeholders.
+Letting yt-dlp fall through its normal multi-client list instead
+sidesteps that experiment and reliably recovers the full format ladder
+(confirmed up to a real 4K60 source), cookies still attached throughout.
+The Video mode quality dropdown (Best/1080p/720p/480p/360p) caps
+`format` at that height via yt-dlp's own selector syntax -- a no-op on
+anything that never reaches the cap anyway, so it's safe to send
+site-wide, not just for YouTube.
+
 ## How Photo mode works
 
 Photo mode intentionally doesn't use yt-dlp. yt-dlp (what Video/MP3 run on)

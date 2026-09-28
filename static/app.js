@@ -7,6 +7,7 @@ const cancelBtn = document.getElementById("cancel-btn");
 const errorEl = document.getElementById("error");
 const modeToggle = document.getElementById("mode-toggle");
 const modeButtons = modeToggle.querySelectorAll(".mode-btn");
+const qualitySelect = document.getElementById("quality-select");
 
 const LOADING_MESSAGES = {
   video: [
@@ -45,6 +46,7 @@ modeButtons.forEach((modeBtn) => {
       b.classList.toggle("is-active", active);
       b.setAttribute("aria-pressed", String(active));
     });
+    qualitySelect.classList.toggle("is-hidden", mode !== "video");
     const placeholders = {
       video: "Paste a video link...",
       mp3: "Paste a link to extract audio...",
@@ -57,6 +59,7 @@ modeButtons.forEach((modeBtn) => {
 function setLoading(loading) {
   input.disabled = loading;
   btn.disabled = loading;
+  qualitySelect.disabled = loading;
   btn.classList.toggle("is-loading", loading);
 
   statusEl.classList.toggle("is-visible", loading);
@@ -119,7 +122,7 @@ form.addEventListener("submit", async (e) => {
     const res = await fetch("/api/download", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, format: mode }),
+      body: JSON.stringify({ url, format: mode, quality: qualitySelect.value }),
       signal: activeController.signal,
     });
 
