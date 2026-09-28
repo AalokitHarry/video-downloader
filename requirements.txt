@@ -1,3 +1,12 @@
+# yt-dlp is version-floored (not left bare) because Docker caches the
+# `pip install` layer by this file's hash alone (it's COPY'd and installed
+# before the rest of the source in the Dockerfile) -- an unpinned
+# `yt-dlp[default]` silently keeps whatever version was resolved at the
+# last build that actually touched this file, even across deploys that
+# change downloader.py. Confirmed directly: a downloader.py fix landed on
+# production with byte-for-byte identical (unchanged) output, because the
+# stale cached yt-dlp never got a chance to re-resolve. Bump this floor
+# whenever a fix depends on a newer yt-dlp, to force a fresh install.
 Flask>=3.0,<4
-yt-dlp[default]
+yt-dlp[default]>=2026.8.19
 waitress>=3.0
