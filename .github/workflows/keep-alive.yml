@@ -2,13 +2,18 @@ name: Keep-alive ping
 
 on:
   schedule:
-    # Every 10 minutes, ~8am-midnight IST (02:30-18:30 UTC) -- keeps the
-    # Render free-tier service from spinning down during hours real
-    # visitors are likely to show up, without burning enough hours to
-    # risk hitting Render's 750-hour/month free cap (this window is
-    # ~450 hours/month, well under it). Outside this window the service
-    # is left to spin down as normal.
-    - cron: "*/10 2-18 * * *"
+    # Every 10 minutes, around the clock. A spun-down instance serves
+    # Render's own bare "waking up" splash screen (zero actual site
+    # content) for the ~20-60s it takes to cold-start -- confirmed
+    # directly, and almost certainly what got the site flagged for
+    # AdSense's "ads on screens without publisher content" policy, since
+    # crawlers aren't limited to the daytime-IST window this used to
+    # cover. Always-on uses ~744 of Render's 750 free instance-hours/month
+    # for this one service -- leaves only a few hours of headroom for
+    # redeploys or any other free-tier service on the same account, so
+    # revisit this (e.g. a paid plan) if that margin ever becomes a
+    # problem.
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
